@@ -28,11 +28,21 @@ public class TelegramNotifier : ITelegramNotifier
 
     public async Task Send(string text)
     {
-        _logger.LogInformation($"Send TG message:{Environment.NewLine}: {text}");
-        
-        await _bot.SendTextMessageAsync(
-            chatId: new ChatId(_configuration.Value.TelegramChannelId),
-            text: text
-        );
+        _logger.LogInformation($"Send TG message:{Environment.NewLine}" +
+                               $"==================================={Environment.NewLine}" +
+                               $"{text}{Environment.NewLine}" +
+                               $"===================================");
+
+        try
+        {
+            await _bot.SendTextMessageAsync(
+                chatId: new ChatId(_configuration.Value.TelegramChannelId),
+                text: text
+            );
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Send TG message failed");
+        }
     }
 }

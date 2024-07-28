@@ -28,7 +28,16 @@ CandleMage - это проект для отслеживания курсов а
 ### Разработка и сборка проекта
 * Необходим .NET 6
 
+### Создание и получение токена TinkoffApi:
+* https://www.tbank.ru/invest/settings/api/
+
 ### Настройка уведомлений в телеграм бота:
 * Создайте своего бота через https://t.me/BotFather
 * Создайте свой канал и узнайте его Id (например через добавления бота @RawDataBot в канал)
 * Добавьте созданного бота в созданный канал
+
+### Полезные материалы:
+* Документация TinkoffAPI https://tinkoff.github.io/investAPI/
+* C# SDK repo [new] https://github.com/RussianInvestments/invest-api-csharp-sdk
+* C# SDK repo [old] https://github.com/Tinkoff/invest-api-csharp-sdk
+* Telegram T-Invest Api Community chat https://t.me/joinchat/VaW05CDzcSdsPULM
