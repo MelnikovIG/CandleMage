@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CandleMage.CLI", "CandleMage.CLI\CandleMage.CLI.csproj", "{BB05ED98-7EB2-4201-BFFE-4260DFC94C4F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CandleMage.Core", "CandleMage.Core\CandleMage.Core.csproj", "{BA1376F6-16CE-4E72-9ED3-B2CBFB5B72B6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NonProjectFiles", "NonProjectFiles", "{EB51E629-1E79-4181-99E8-B3C95441BC06}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\Readme.md = ..\..\Readme.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BB05ED98-7EB2-4201-BFFE-4260DFC94C4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB05ED98-7EB2-4201-BFFE-4260DFC94C4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB05ED98-7EB2-4201-BFFE-4260DFC94C4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB05ED98-7EB2-4201-BFFE-4260DFC94C4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA1376F6-16CE-4E72-9ED3-B2CBFB5B72B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA1376F6-16CE-4E72-9ED3-B2CBFB5B72B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA1376F6-16CE-4E72-9ED3-B2CBFB5B72B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA1376F6-16CE-4E72-9ED3-B2CBFB5B72B6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
