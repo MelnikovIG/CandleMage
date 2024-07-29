@@ -11,6 +11,7 @@ builder.Services.AddHostedService<HostedService>();
 builder.Logging.AddConsole();
 builder.Services.Configure<Configuration>(builder.Configuration.GetSection("Configuration"));
 builder.Services.AddSingleton<ITelegramNotifier, TelegramNotifier>();
+builder.Services.AddSingleton<IExecutor, Executor>();
 
 using var host = builder.Build();
 await host.RunAsync();

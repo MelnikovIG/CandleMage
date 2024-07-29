@@ -6,7 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CandleMage.Core", "CandleMa
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NonProjectFiles", "NonProjectFiles", "{EB51E629-1E79-4181-99E8-B3C95441BC06}"
 	ProjectSection(SolutionItems) = preProject
-		..\..\Readme.md = ..\..\Readme.md
+		Directory.Build.props = Directory.Build.props
+		..\Readme.md = ..\Readme.md
 	EndProjectSection
 EndProject
 Global
