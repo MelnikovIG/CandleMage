@@ -1,4 +1,6 @@
-﻿using Google.Protobuf.Collections;
+﻿using System.Collections.Concurrent;
+using Google.Protobuf.Collections;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -40,7 +42,8 @@ public class Executor : IExecutor
                 Uid: x.Instruments.First().Uid,
                 Name: x.Name,
                 Ticker: x.Instruments.First().Ticker,
-                SubscriptionStatus: Status.NotSubscribed
+                SubscriptionStatus: Status.NotSubscribed,
+                MinuteCandles: new ConcurrentDictionary<DateTime, CandleInfo>()
             ))
             .ToList();
 
@@ -105,6 +108,12 @@ public class Executor : IExecutor
             var notSubscribedAssets =
                 assets.Where(x => x.SubscriptionStatus == Status.NotSubscribed).ToList();
 
+            if (notSubscribedAssets.Count == 0)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10), ct);
+                continue;
+            }
+            
             for (int i = 0; i < availableStreams; i++)
             {
                 const int maxSteamSize = 300;
@@ -114,6 +123,11 @@ public class Executor : IExecutor
                     .Take(maxSteamSize)
                     .ToList();
 
+                if (chunk.Count == 0)
+                {
+                    break;
+                }
+
                 foreach (var item in chunk)
                 {
                     item.SubscriptionStatus = Status.Pending;
@@ -121,7 +135,7 @@ public class Executor : IExecutor
 
                 var subscribeData = chunk.Select(x => new CandleInstrument
                 {
-                    Interval = SubscriptionInterval.OneHour,
+                    Interval = SubscriptionInterval.OneMinute,
                     InstrumentId = x.Uid
                 }).ToList();
 
@@ -175,8 +189,79 @@ public class Executor : IExecutor
                     var candle = response.Candle;
                     assetsDict.TryGetValue(candle.InstrumentUid, out var ticker);
 
-                    _logger.LogInformation("Candle: Ticker '{Ticker}' Figi '{Figi}', Open: '{Open}', Close: '{Close}'",
-                        ticker, candle.Figi, candle.Open, candle.Close);
+                    var assetInfo = chunkDict[candle.InstrumentUid];
+
+                    var candleStartTime = candle.Time.ToDateTime();
+
+                    var candlePeriodNotified = assetInfo.MinuteCandles.TryGetValue(candleStartTime, out var lastCandle) 
+                                               && lastCandle.PeriodNotified;
+                    
+                    var candleInfo = new CandleInfo(
+                        candlePeriodNotified,
+                        candleStartTime,
+                        candle.Open,
+                        candle.Close,
+                        candle.High,
+                        candle.Low
+                    );
+                    
+                    assetInfo.MinuteCandles[candleStartTime] = candleInfo;
+                    if (assetInfo.MinuteCandles.Count > 100)
+                    {
+                        assetInfo.MinuteCandles = new ConcurrentDictionary<DateTime, CandleInfo>(assetInfo.MinuteCandles
+                            .OrderByDescending(x => x.Value.StartTime)
+                            .Take(50) //shrink to 50
+                            .ToDictionary(x => x.Key, x => x.Value));
+                    }
+
+                    // _logger.LogInformation("Candle: Ticker '{Ticker}' Figi '{Figi}', Open: '{Open}', Close: '{Close}'",
+                    //     ticker, candle.Figi, candle.Open, candle.Close);
+                    
+                    //Если по последней минутной свече не было нотификаций, проверим изменения
+                    if (!candlePeriodNotified)
+                    {
+                        //Отсортируем свечи по убыванию для поиска изменений по цене
+                        var orderedCandles = assetInfo.MinuteCandles.Values
+                            .OrderByDescending(x => x.StartTime)
+                            .Skip(1) //последняя текущая не нужна
+                            .ToList();
+
+                        decimal currentCandlePrice = candle.Close;
+
+                        const decimal priceLimitPercent = 0.0015m; //0.15% //TODO: move to config
+                        const int maxScanCandlesCount = 5; //5 min //TODO: move to config
+
+                        var currentScanned = 0;
+                        foreach (var orderedCandle in orderedCandles)
+                        {
+                            var percentDiff = (currentCandlePrice - orderedCandle.Close) / orderedCandle.Close;
+                            if (percentDiff is > priceLimitPercent or < -priceLimitPercent)
+                            {
+                                candleInfo.PeriodNotified = true;
+
+                                _logger.LogInformation(
+                                    "Price changed: Ticker '{Ticker}' From {FromPrice} To {ToPrice} In {Minutes} mins, Percent {Percent:N2} %",
+                                    ticker, orderedCandle.Close, currentCandlePrice, currentScanned + 1, Math.Abs(percentDiff * 100));
+
+                                var msg = $"Price changed: Ticker '{ticker}' From {orderedCandle.Close} To {currentCandlePrice} In {currentScanned + 1} mins, Percent {Math.Abs(percentDiff * 100):N2} %";
+                                await _telegramNotifier.Send(msg);
+                                
+                                break;
+                            }
+
+                            if (++currentScanned == maxScanCandlesCount)
+                            {
+                                break;
+                            }
+
+                            if (orderedCandle.PeriodNotified) //Если у какой то свечи была нотификация, до нее свечи не проверяем
+                            {
+                                break;
+                            }
+                        }
+                        
+                    }
+
                 }
             }
         }
@@ -203,9 +288,22 @@ public class Executor : IExecutor
         string Uid,
         string Name,
         string Ticker,
-        Status SubscriptionStatus
+        Status SubscriptionStatus,
+        ConcurrentDictionary<DateTime, CandleInfo> MinuteCandles
     )
     {
         public Status SubscriptionStatus { get; set; } = SubscriptionStatus;
+        
+        //TODO: переделать хранение, тут неоптимальное
+        public ConcurrentDictionary<DateTime, CandleInfo> MinuteCandles { get; set; } = MinuteCandles;
     }
+
+    private record struct CandleInfo(
+        bool PeriodNotified,
+        DateTime StartTime,
+        decimal Open,
+        decimal Close,
+        decimal High,
+        decimal Low
+    );
 }
