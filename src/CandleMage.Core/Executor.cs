@@ -228,7 +228,7 @@ public class Executor : IExecutor
 
                         decimal currentCandlePrice = candle.Close;
 
-                        const decimal priceLimitPercent = 0.0015m; //0.15% //TODO: move to config
+                        const decimal priceLimitPercent = 0.002m; //0.2% //TODO: move to config
                         const int maxScanCandlesCount = 5; //5 min //TODO: move to config
 
                         var currentScanned = 0;
@@ -240,10 +240,10 @@ public class Executor : IExecutor
                                 candleInfo.PeriodNotified = true;
 
                                 _logger.LogInformation(
-                                    "Price changed: Ticker '{Ticker}' From {FromPrice} To {ToPrice} In {Minutes} mins, Percent {Percent:N2} %",
-                                    ticker, orderedCandle.Close, currentCandlePrice, currentScanned + 1, Math.Abs(percentDiff * 100));
+                                    "{Percent:N2}% '{Ticker}' {FromPrice} -> {ToPrice} за {Minutes} мин",
+                                    Math.Abs(percentDiff * 100), ticker, orderedCandle.Close, currentCandlePrice, currentScanned + 1);
 
-                                var msg = $"Price changed: Ticker '{ticker}' From {orderedCandle.Close} To {currentCandlePrice} In {currentScanned + 1} mins, Percent {Math.Abs(percentDiff * 100):N2} %";
+                                var msg = $"{Math.Abs(percentDiff * 100):N2}% '{ticker}' {orderedCandle.Close} -> {currentCandlePrice} за {currentScanned + 1} мин";
                                 await _telegramNotifier.Send(msg);
                                 
                                 break;
@@ -298,12 +298,15 @@ public class Executor : IExecutor
         public ConcurrentDictionary<DateTime, CandleInfo> MinuteCandles { get; set; } = MinuteCandles;
     }
 
-    private record struct CandleInfo(
+    private record CandleInfo(
         bool PeriodNotified,
         DateTime StartTime,
         decimal Open,
         decimal Close,
         decimal High,
         decimal Low
-    );
+    )
+    {
+        public bool PeriodNotified { get; set; } = PeriodNotified;
+    }
 }
