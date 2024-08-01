@@ -49,7 +49,7 @@ public class Executor : IExecutor
 
         var assetsDict = assets.ToDictionary(x => x.Uid, x => x.Ticker);
 
-        await _telegramNotifier.Send($"Assets count: {assets.Count}");
+        await _telegramNotifier.SendServiceMessage($"Assets count: {assets.Count}");
 
         while (!ct.IsCancellationRequested)
         {
@@ -66,14 +66,14 @@ public class Executor : IExecutor
             catch (Exception e)
             {
                 _logger.LogError(e, "Failed to get user tariffs");
-                await Task.Delay(TimeSpan.FromSeconds(10), ct);
+                await Task.Delay(TimeSpan.FromSeconds(60), ct);
                 continue;
             }
 
             if (marketStreamLimits == null)
             {
                 _logger.LogInformation("marketStreamLimits not found");
-                await Task.Delay(TimeSpan.FromSeconds(10), ct);
+                await Task.Delay(TimeSpan.FromSeconds(60), ct);
                 continue;
             }
 
@@ -95,13 +95,17 @@ public class Executor : IExecutor
                 marketStreamLimits.Open, marketStreamLimits.Limit, availableStreams, subscribed, notSubscribed, pending
             );
 
-            await _telegramNotifier.Send(
+            await _telegramNotifier.SendServiceMessage(
                 $"marketStreamLimits: open '{marketStreamLimits.Open}', limit '{marketStreamLimits.Limit}', available '{availableStreams}'\r\n" +
                 $"subscription status: subscribed {subscribed}, not subscribed {notSubscribed}, pending {pending}");
 
             if (availableStreams == 0)
             {
-                await Task.Delay(TimeSpan.FromSeconds(10), ct);
+                if (subscribed > 0)
+                    await Task.Delay(TimeSpan.FromSeconds(60), ct);
+                else
+                    await Task.Delay(TimeSpan.FromSeconds(30), ct);
+
                 continue;
             }
 
@@ -110,7 +114,7 @@ public class Executor : IExecutor
 
             if (notSubscribedAssets.Count == 0)
             {
-                await Task.Delay(TimeSpan.FromSeconds(10), ct);
+                await Task.Delay(TimeSpan.FromSeconds(60), ct);
                 continue;
             }
             
@@ -228,8 +232,8 @@ public class Executor : IExecutor
 
                         decimal currentCandlePrice = candle.Close;
 
-                        const decimal priceLimitPercent = 0.002m; //0.2% //TODO: move to config
-                        const int maxScanCandlesCount = 5; //5 min //TODO: move to config
+                        const decimal priceLimitPercent = 0.01m; //0.2% //TODO: move to config
+                        const int maxScanCandlesCount = 10; //5 min //TODO: move to config
 
                         var currentScanned = 0;
                         foreach (var orderedCandle in orderedCandles)
@@ -244,7 +248,7 @@ public class Executor : IExecutor
                                     Math.Abs(percentDiff * 100), ticker, orderedCandle.Close, currentCandlePrice, currentScanned + 1);
 
                                 var msg = $"{Math.Abs(percentDiff * 100):N2}% '{ticker}' {orderedCandle.Close} -> {currentCandlePrice} за {currentScanned + 1} мин";
-                                await _telegramNotifier.Send(msg);
+                                await _telegramNotifier.SendClientMessage(msg);
                                 
                                 break;
                             }

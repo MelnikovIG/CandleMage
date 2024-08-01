@@ -7,7 +7,8 @@ namespace CandleMage.Core;
 
 public interface ITelegramNotifier
 {
-    Task Send(string text);
+    Task SendClientMessage(string text);
+    Task SendServiceMessage(string text);
 }
 
 public class TelegramNotifier : ITelegramNotifier
@@ -26,7 +27,17 @@ public class TelegramNotifier : ITelegramNotifier
         _bot = new TelegramBotClient(_configuration.Value.TelegramBotToken);
     }
 
-    public async Task Send(string text)
+    public async Task SendClientMessage(string text)
+    {
+        await SendBase(text, _configuration.Value.TelegramClientChannelId);
+    }
+    
+    public async Task SendServiceMessage(string text)
+    {
+        await SendBase(text, _configuration.Value.TelegramServiceChannelId);
+    }
+    
+    private async Task SendBase(string text, string chatId)
     {
         _logger.LogInformation($"Send TG message:{Environment.NewLine}" +
                                $"==================================={Environment.NewLine}" +
@@ -36,7 +47,7 @@ public class TelegramNotifier : ITelegramNotifier
         try
         {
             await _bot.SendTextMessageAsync(
-                chatId: new ChatId(_configuration.Value.TelegramChannelId),
+                chatId: new ChatId(chatId),
                 text: text
             );
         }

@@ -30,13 +30,13 @@ public class HostedService : BackgroundService
     {
         await Task.Yield();
         
-        _logger.LogInformation("Sandbox '{Sandbox}', telegramChannelId '{TelegramChannelId}'",
-            _configuration.Sandbox, _configuration.TelegramChannelId);
+        _logger.LogInformation("Sandbox '{Sandbox}', telegramClientChannelId '{TelegramClientChannelId}', telegramServiceChannelId '{TelegramServiceChannelId}'",
+            _configuration.Sandbox, _configuration.TelegramClientChannelId, _configuration.TelegramServiceChannelId);
         
-        await _telegramNotifier.Send("App started");
+        await _telegramNotifier.SendServiceMessage("App started");
         
         await _executor.Run(ct);
         
-        await _telegramNotifier.Send("App complete");
+        await _telegramNotifier.SendServiceMessage("App complete");
     }
 }
