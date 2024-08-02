@@ -232,7 +232,7 @@ public class Executor : IExecutor
 
                         decimal currentCandlePrice = candle.Close;
 
-                        const decimal priceLimitPercent = 0.01m; //0.2% //TODO: move to config
+                        const decimal priceLimitPercent = 0.05m; //5% //TODO: move to config
                         const int maxScanCandlesCount = 10; //5 min //TODO: move to config
 
                         var currentScanned = 0;
@@ -243,11 +243,13 @@ public class Executor : IExecutor
                             {
                                 candleInfo.PeriodNotified = true;
 
+                                var indicator = percentDiff > priceLimitPercent ? "🟢" : "🔴";
+                                
                                 _logger.LogInformation(
-                                    "{Percent:N2}% '{Ticker}' {FromPrice} -> {ToPrice} за {Minutes} мин",
-                                    Math.Abs(percentDiff * 100), ticker, orderedCandle.Close, currentCandlePrice, currentScanned + 1);
+                                    @"{Indicator} {Percent:N2}% '{Ticker}' {FromPrice} → {ToPrice} за {Minutes} мин",
+                                    indicator, Math.Abs(percentDiff * 100), ticker, orderedCandle.Close, currentCandlePrice, currentScanned + 1);
 
-                                var msg = $"{Math.Abs(percentDiff * 100):N2}% '{ticker}' {orderedCandle.Close} -> {currentCandlePrice} за {currentScanned + 1} мин";
+                                var msg = $@"{indicator} {Math.Abs(percentDiff * 100):N2}% '{ticker}' {orderedCandle.Close} → {currentCandlePrice} за {currentScanned + 1} мин";
                                 await _telegramNotifier.SendClientMessage(msg);
                                 
                                 break;
