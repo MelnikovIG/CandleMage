@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using Google.Protobuf.Collections;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
@@ -20,6 +21,10 @@ public class Executor : IExecutor
     private readonly ILogger<Executor> _logger;
     private readonly Configuration _configuration;
     private readonly InvestApiClient _investApiClient;
+    
+    private long _rpsCandlesReceived = 0;
+    private Stopwatch _rpsStopwatch = new Stopwatch();
+    
 
     public Executor(
         ITelegramNotifier telegramNotifier,
@@ -50,9 +55,15 @@ public class Executor : IExecutor
         var assetsDict = assets.ToDictionary(x => x.Uid, x => x.Ticker);
 
         await _telegramNotifier.SendServiceMessage($"Assets count: {assets.Count}");
-
+        
         while (!ct.IsCancellationRequested)
         {
+            var candlesPerSec = _rpsStopwatch.IsRunning
+                ? (int)(_rpsCandlesReceived / _rpsStopwatch.Elapsed.TotalSeconds)
+                : 0;
+            _rpsCandlesReceived = 0;
+            _rpsStopwatch.Restart();
+            
             StreamLimit? marketStreamLimits;
 
             try
@@ -91,13 +102,13 @@ public class Executor : IExecutor
 
             _logger.LogInformation(
                 "marketStreamLimits: open '{Open}', limit '{Limit}', available '{Available}'\r\n" +
-                "subscription status: subscribed {Subscribed}, not subscribed {NotSubscribed}, pending {Pending}",
-                marketStreamLimits.Open, marketStreamLimits.Limit, availableStreams, subscribed, notSubscribed, pending
+                "subscription status: subscribed {Subscribed}, not subscribed {NotSubscribed}, pending {Pending}, candles/sec {CandlesPerSec}",
+                marketStreamLimits.Open, marketStreamLimits.Limit, availableStreams, subscribed, notSubscribed, pending, candlesPerSec
             );
 
             await _telegramNotifier.SendServiceMessage(
                 $"marketStreamLimits: open '{marketStreamLimits.Open}', limit '{marketStreamLimits.Limit}', available '{availableStreams}'\r\n" +
-                $"subscription status: subscribed {subscribed}, not subscribed {notSubscribed}, pending {pending}");
+                $"subscription status: subscribed {subscribed}, not subscribed {notSubscribed}, pending {pending}, candles/sec {candlesPerSec}");
 
             if (availableStreams == 0)
             {
@@ -190,6 +201,8 @@ public class Executor : IExecutor
 
                 if (response.Candle != null)
                 {
+                    Interlocked.Increment(ref _rpsCandlesReceived);
+                    
                     var candle = response.Candle;
                     assetsDict.TryGetValue(candle.InstrumentUid, out var ticker);
 
@@ -232,18 +245,18 @@ public class Executor : IExecutor
 
                         decimal currentCandlePrice = candle.Close;
 
-                        const decimal priceLimitPercent = 0.05m; //5% //TODO: move to config
-                        const int maxScanCandlesCount = 10; //5 min //TODO: move to config
+                        decimal notifyChangePercentThreshold = _configuration.NotifyChangePercentThreshold;
+                        int changeMinutesThreshold = _configuration.NotifyChangeMinutesThreshold;
 
                         var currentScanned = 0;
                         foreach (var orderedCandle in orderedCandles)
                         {
                             var percentDiff = (currentCandlePrice - orderedCandle.Close) / orderedCandle.Close;
-                            if (percentDiff is > priceLimitPercent or < -priceLimitPercent)
+                            if (percentDiff > notifyChangePercentThreshold || percentDiff < -notifyChangePercentThreshold)
                             {
                                 candleInfo.PeriodNotified = true;
 
-                                var indicator = percentDiff > priceLimitPercent ? "🟢" : "🔴";
+                                var indicator = percentDiff > notifyChangePercentThreshold ? "🟢" : "🔴";
                                 
                                 _logger.LogInformation(
                                     @"{Indicator} {Percent:N2}% '{Ticker}' {FromPrice} → {ToPrice} за {Minutes} мин",
@@ -255,7 +268,7 @@ public class Executor : IExecutor
                                 break;
                             }
 
-                            if (++currentScanned == maxScanCandlesCount)
+                            if (++currentScanned == changeMinutesThreshold)
                             {
                                 break;
                             }
