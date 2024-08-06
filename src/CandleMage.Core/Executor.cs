@@ -64,31 +64,38 @@ public class Executor : IExecutor
             _rpsCandlesReceived = 0;
             _rpsStopwatch.Restart();
             
-            StreamLimit? marketStreamLimits;
-
-            try
-            {
-                const string marketDataStreamName =
-                    "tinkoff.public.invest.api.contract.v1.MarketDataStreamService/MarketDataStream";
-                var userTariffs = await _investApiClient.Users.GetUserTariffAsync(ct);
-                marketStreamLimits =
-                    userTariffs.StreamLimits.FirstOrDefault(x => x.Streams.Contains(marketDataStreamName));
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Failed to get user tariffs");
-                await Task.Delay(TimeSpan.FromSeconds(60), ct);
-                continue;
-            }
-
-            if (marketStreamLimits == null)
-            {
-                _logger.LogInformation("marketStreamLimits not found");
-                await Task.Delay(TimeSpan.FromSeconds(60), ct);
-                continue;
-            }
-
-            var availableStreams = Math.Max(0, marketStreamLimits.Limit - marketStreamLimits.Open);
+            // StreamLimit? marketStreamLimits;
+            //
+            // try
+            // {
+            //     const string marketDataStreamName =
+            //         "tinkoff.public.invest.api.contract.v1.MarketDataStreamService/MarketDataStream";
+            //     var userTariffs = await _investApiClient.Users.GetUserTariffAsync(ct);
+            //     marketStreamLimits =
+            //         userTariffs.StreamLimits.FirstOrDefault(x => x.Streams.Contains(marketDataStreamName));
+            // }
+            // catch (Exception e)
+            // {
+            //     _logger.LogError(e, "Failed to get user tariffs");
+            //     await Task.Delay(TimeSpan.FromSeconds(60), ct);
+            //     continue;
+            // }
+            //
+            // if (marketStreamLimits == null)
+            // {
+            //     _logger.LogInformation("marketStreamLimits not found");
+            //     await Task.Delay(TimeSpan.FromSeconds(60), ct);
+            //     continue;
+            // }
+            //
+            // var openStreams = marketStreamLimits.Open;
+            // var limitStreams = marketStreamLimits.Limit;
+            // var availableStreams = Math.Max(0, marketStreamLimits.Limit - marketStreamLimits.Open);
+            
+            //NOTE: GetUserTariffAsync работает криво, игнорми на данный момент
+            var openStreams = -1;
+            var limitStreams = -1;
+            var availableStreams = 4;
 
             var subscribed = 0;
             var notSubscribed = 0;
@@ -103,11 +110,11 @@ public class Executor : IExecutor
             _logger.LogInformation(
                 "marketStreamLimits: open '{Open}', limit '{Limit}', available '{Available}'\r\n" +
                 "subscription status: subscribed {Subscribed}, not subscribed {NotSubscribed}, pending {Pending}, candles/sec {CandlesPerSec}",
-                marketStreamLimits.Open, marketStreamLimits.Limit, availableStreams, subscribed, notSubscribed, pending, candlesPerSec
+                openStreams, limitStreams, availableStreams, subscribed, notSubscribed, pending, candlesPerSec
             );
 
             await _telegramNotifier.SendServiceMessage(
-                $"marketStreamLimits: open '{marketStreamLimits.Open}', limit '{marketStreamLimits.Limit}', available '{availableStreams}'\r\n" +
+                $"marketStreamLimits: open '{openStreams}', limit '{limitStreams}', available '{availableStreams}'\r\n" +
                 $"subscription status: subscribed {subscribed}, not subscribed {notSubscribed}, pending {pending}, candles/sec {candlesPerSec}");
 
             if (availableStreams == 0)
