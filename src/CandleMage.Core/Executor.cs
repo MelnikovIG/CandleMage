@@ -99,23 +99,21 @@ public class Executor : IExecutor
 
             var subscribed = 0;
             var notSubscribed = 0;
-            var pending = 0;
             foreach (var asset in assets)
             {
                 if (asset.SubscriptionStatus == Status.Subscribed) subscribed++;
                 if (asset.SubscriptionStatus == Status.NotSubscribed) notSubscribed++;
-                if (asset.SubscriptionStatus == Status.Pending) pending++;
             }
 
             _logger.LogInformation(
                 "marketStreamLimits: open '{Open}', limit '{Limit}', available '{Available}'\r\n" +
-                "subscription status: subscribed {Subscribed}, not subscribed {NotSubscribed}, pending {Pending}, candles/sec {CandlesPerSec}",
-                openStreams, limitStreams, availableStreams, subscribed, notSubscribed, pending, candlesPerSec
+                "subscription status: subscribed {Subscribed}, not subscribed {NotSubscribed}, candles/sec {CandlesPerSec}",
+                openStreams, limitStreams, availableStreams, subscribed, notSubscribed, candlesPerSec
             );
 
             await _telegramNotifier.SendServiceMessage(
                 $"marketStreamLimits: open '{openStreams}', limit '{limitStreams}', available '{availableStreams}'\r\n" +
-                $"subscription status: subscribed {subscribed}, not subscribed {notSubscribed}, pending {pending}, candles/sec {candlesPerSec}");
+                $"subscription status: subscribed {subscribed}, not subscribed {notSubscribed}, candles/sec {candlesPerSec}");
 
             if (availableStreams == 0)
             {
@@ -149,12 +147,7 @@ public class Executor : IExecutor
                 {
                     break;
                 }
-
-                foreach (var item in chunk)
-                {
-                    item.SubscriptionStatus = Status.Pending;
-                }
-
+                
                 var subscribeData = chunk.Select(x => new CandleInstrument
                 {
                     Interval = SubscriptionInterval.OneMinute,
@@ -306,7 +299,6 @@ public class Executor : IExecutor
     private enum Status
     {
         NotSubscribed,
-        Pending,
         Subscribed
     }
 
