@@ -27,7 +27,7 @@ CandleMage - это проект для отслеживания курсов а
 * Телеграм чат для общения https://t.me/CandleMageChat
 
 ### Разработка и сборка проекта
-* Необходим .NET 6
+* Необходим .NET 8
 
 ### Создание и получение токена TinkoffApi:
 * https://www.tbank.ru/invest/settings/api/
