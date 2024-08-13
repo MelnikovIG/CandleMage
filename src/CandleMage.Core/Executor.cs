@@ -262,7 +262,7 @@ public class Executor : IExecutor
                                     @"{Indicator} {Percent:N2}% '{Ticker}' {FromPrice} → {ToPrice} за {Minutes} мин",
                                     indicator, Math.Abs(percentDiff * 100), ticker, orderedCandle.Close, currentCandlePrice, currentScanned + 1);
 
-                                var msg = $@"{indicator} {Math.Abs(percentDiff * 100):N2}% '{ticker}' {orderedCandle.Close} → {currentCandlePrice} за {currentScanned + 1} мин";
+                                var msg = $@"{indicator} {Math.Abs(percentDiff * 100):N2}% [{ticker}]({GetTickerLink(ticker)}) {orderedCandle.Close} → {currentCandlePrice} за {currentScanned + 1} мин";
                                 await _telegramNotifier.SendClientMessage(msg);
                                 
                                 break;
@@ -327,4 +327,6 @@ public class Executor : IExecutor
     {
         public bool PeriodNotified { get; set; } = PeriodNotified;
     }
+
+    private static string GetTickerLink(string? ticker) => $"https://www.tinkoff.ru/invest/stocks/{ticker}/";
 }
