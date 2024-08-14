@@ -1,4 +1,5 @@
-﻿using CandleMage.Core;
+﻿using CandleMage.CLI;
+using CandleMage.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,7 @@ builder.Logging.AddConsole();
 builder.Services.Configure<Configuration>(builder.Configuration.GetSection("Configuration"));
 builder.Services.AddSingleton<ITelegramNotifier, TelegramNotifier>();
 builder.Services.AddSingleton<IExecutor, Executor>();
+builder.Services.AddSingleton<IStockEventNotifier, ConsoleStockEventNotifier>();
 
 using var host = builder.Build();
 await host.RunAsync();

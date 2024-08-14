@@ -17,20 +17,22 @@ public interface IExecutor
 
 public class Executor : IExecutor
 {
+    private readonly IStockEventNotifier _stockEventNotifier;
     private readonly ITelegramNotifier _telegramNotifier;
     private readonly ILogger<Executor> _logger;
     private readonly Configuration _configuration;
     private readonly InvestApiClient _investApiClient;
     
     private long _rpsCandlesReceived = 0;
-    private Stopwatch _rpsStopwatch = new Stopwatch();
-    
+    private readonly Stopwatch _rpsStopwatch = new Stopwatch();
 
     public Executor(
+        IStockEventNotifier stockEventNotifier,
         ITelegramNotifier telegramNotifier,
         IOptions<Configuration> configuration,
         ILogger<Executor> logger)
     {
+        _stockEventNotifier = stockEventNotifier;
         _telegramNotifier = telegramNotifier;
         _logger = logger;
         _configuration = configuration.Value;
@@ -55,6 +57,10 @@ public class Executor : IExecutor
         var assetsDict = assets.ToDictionary(x => x.Uid, x => x.Ticker);
 
         await _telegramNotifier.SendServiceMessage($"Assets count: {assets.Count}");
+
+        _stockEventNotifier.UpdateAssetsInfo(
+            assets.Select(x => new UpdateAssetInfo(x.Uid, x.Name, x.Ticker)).ToList()
+        );
         
         while (!ct.IsCancellationRequested)
         {
@@ -204,8 +210,15 @@ public class Executor : IExecutor
                     Interlocked.Increment(ref _rpsCandlesReceived);
                     
                     var candle = response.Candle;
-                    assetsDict.TryGetValue(candle.InstrumentUid, out var ticker);
 
+                    _stockEventNotifier.UpdateCandleInfo(
+                        new UpdateCandleInfo(
+                            candle.InstrumentUid,
+                            candle.Close
+                        ));
+                    
+                    assetsDict.TryGetValue(candle.InstrumentUid, out var ticker);
+                    
                     var assetInfo = chunkDict[candle.InstrumentUid];
 
                     var candleStartTime = candle.Time.ToDateTime();
@@ -284,9 +297,9 @@ public class Executor : IExecutor
                 }
             }
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            _logger.LogError(e, "Error reading stream");
+            _logger.LogError("Error reading stream");
 
             foreach (var subscribedUid in subscribedSoFar)
             {
