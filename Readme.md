@@ -36,6 +36,8 @@ CandleMage - это проект для отслеживания курсов а
 * Создайте своего бота через https://t.me/BotFather
 * Создайте свой канал и узнайте его Id (например через добавления бота @RawDataBot в канал)
 * Добавьте созданного бота в созданный канал
+  
+![image](https://github.com/user-attachments/assets/522eb737-f778-4268-a2d5-221ed6d7d9b4)
 
 ### Полезные материалы:
 * Документация TinkoffAPI https://tinkoff.github.io/investAPI/
