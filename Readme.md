@@ -5,6 +5,8 @@
 ### Что такое CandleMage
 CandleMage - это проект для отслеживания курсов акций через API Тинькофф инвестиций.
 
+![image](https://github.com/user-attachments/assets/76c9a0f8-596e-4f61-a40c-3f4c97ff85c7)
+
 Планируемые фичи:
 - [x] Получение списка акций и подписка на стрим свечей через Tinkoff API
 - [x] Отслеживание изменений курса акций по цене
@@ -13,13 +15,13 @@ CandleMage - это проект для отслеживания курсов а
 - [x] Отправка уведомлений об изменениях акций в Telegram
 
 Поддерживаемые патформы:
-- [x] Windows (CLI)
-- [x] Linux (CLI)
-- [ ] Mac
+- [x] Windows (CLI, Desktop)
+- [x] Linux (CLI, Desktop)
+- [x] Mac (CLI, Desktop)
 
 Способ запуска приложений:
 - [x] CLI (консоль)
-- [ ] Desktop UI (возможно через Avalonia)
+- [x] Desktop UI (возможно через Avalonia)
 - [ ] Web (пока под вопросом)
 
 ### Ссылки
