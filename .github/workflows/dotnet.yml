@@ -1,0 +1,50 @@
+name: .NET
+
+on:
+  push:
+    tags:
+      - "*.*.*"
+
+jobs:
+  build:
+
+    strategy:
+      matrix:
+        kind: ['linux', 'windows', 'macOS']
+        app: ['cli','desktop']
+        include:
+          - kind: linux
+            os: ubuntu-latest
+            target: linux-x64
+          - kind: windows
+            os: windows-latest
+            target: win-x64
+          - kind: macOS
+            os: macos-latest
+            target: osx-x64
+          - app: cli
+            projectPath: ./src/CandleMage.CLI/CandleMage.CLI.csproj
+          - app: desktop
+            projectPath: ./src/CandleMage.Desktop/CandleMage.Desktop.csproj
+            
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Publish
+      run: dotnet publish ${{ matrix.projectPath }} --runtime "${{ matrix.target }}" -c Release -o "${{ matrix.app }}-${{ matrix.target }}-${{ github.ref_name }}"
+    - name: Archive Release
+      uses: thedoctor0/zip-release@0.7.5
+      with:
+        type: 'zip'
+        path: ./${{ matrix.app }}-${{ matrix.target }}-${{ github.ref_name }}/
+        filename: '${{ matrix.app }}-${{ matrix.target }}-${{ github.ref_name }}.zip'
+    - name: Create release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          *.zip
