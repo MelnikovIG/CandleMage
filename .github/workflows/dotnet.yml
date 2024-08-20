@@ -2,9 +2,8 @@ name: .NET
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    tags:
+      - "*.*.*"
 
 jobs:
   build:
@@ -36,13 +35,21 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
-#    - name: Restore dependencies
-#      run: dotnet restore ./src
-#    - name: Build
-#      run: dotnet restore ./src
-    - name: Publish
-      run: dotnet publish ${{ matrix.projectPath }} --runtime "${{ matrix.target }}" -c Release -o ./output
-    - uses: actions/upload-artifact@v4
+    - name: Publish and pack
+      run: |
+        release_name="${{ matrix.app }}-${{ matrix.target }}-${{ github.ref_name }}"
+        
+        # Publish
+        dotnet publish ${{ matrix.projectPath }} --runtime "${{ matrix.target }}" -c Release -o "$release_name"
+        
+        # Pack files
+        7z a -tzip "${release_name}.zip" "./${release_name}/*"
+        
+        # Delete output directory
+        rm -r "$release_name"
+    - name: Create release
+      uses: softprops/action-gh-release@v2
       with:
-        name: ${{ matrix.app }}-${{ matrix.target }}-${{ github.ref_name }}
-        path: ./output
+        files: |
+          *.zip
+          *.gz
