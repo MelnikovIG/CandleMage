@@ -65,7 +65,7 @@ public class Executor : IExecutor
         while (!ct.IsCancellationRequested)
         {
             var candlesPerSec = _rpsStopwatch.IsRunning
-                ? (int)(_rpsCandlesReceived / _rpsStopwatch.Elapsed.TotalSeconds)
+                ? (_rpsCandlesReceived / _rpsStopwatch.Elapsed.TotalSeconds)
                 : 0;
             _rpsCandlesReceived = 0;
             _rpsStopwatch.Restart();
@@ -99,8 +99,8 @@ public class Executor : IExecutor
             // var availableStreams = Math.Max(0, marketStreamLimits.Limit - marketStreamLimits.Open);
             
             //NOTE: GetUserTariffAsync работает криво, игнорми на данный момент
-            var openStreams = -1;
-            var limitStreams = -1;
+            // var openStreams = -1;
+            // var limitStreams = -1;
             var availableStreams = 4;
 
             var subscribed = 0;
@@ -111,16 +111,24 @@ public class Executor : IExecutor
                 if (asset.SubscriptionStatus == Status.NotSubscribed) notSubscribed++;
             }
 
+            // _logger.LogInformation(
+            //     "marketStreamLimits: open '{Open}', limit '{Limit}', available '{Available}'\r\n" +
+            //     "subscription status: subscribed {Subscribed}, not subscribed {NotSubscribed}, candles/sec {CandlesPerSec:F2}",
+            //     openStreams, limitStreams, availableStreams, subscribed, notSubscribed, candlesPerSec
+            // );
+            //
+            // await _telegramNotifier.SendServiceMessage(
+            //     $"marketStreamLimits: open '{openStreams}', limit '{limitStreams}', available '{availableStreams}'\r\n" +
+            //     $"subscription status: subscribed {subscribed}, not subscribed {notSubscribed}, candles/sec {candlesPerSec:F2}");
+
             _logger.LogInformation(
-                "marketStreamLimits: open '{Open}', limit '{Limit}', available '{Available}'\r\n" +
-                "subscription status: subscribed {Subscribed}, not subscribed {NotSubscribed}, candles/sec {CandlesPerSec}",
-                openStreams, limitStreams, availableStreams, subscribed, notSubscribed, candlesPerSec
+                "subscription status: subscribed {Subscribed}, not subscribed {NotSubscribed}, candles/sec {CandlesPerSec:F2}",
+                subscribed, notSubscribed, candlesPerSec
             );
 
             await _telegramNotifier.SendServiceMessage(
-                $"marketStreamLimits: open '{openStreams}', limit '{limitStreams}', available '{availableStreams}'\r\n" +
-                $"subscription status: subscribed {subscribed}, not subscribed {notSubscribed}, candles/sec {candlesPerSec}");
-
+                $"subscription status: subscribed {subscribed}, not subscribed {notSubscribed}, candles/sec {candlesPerSec:F2}");
+            
             if (availableStreams == 0)
             {
                 if (subscribed > 0)
