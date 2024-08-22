@@ -2,8 +2,8 @@
 
 public interface IStockEventNotifier
 {
-    void UpdateAssetsInfo(IReadOnlyList<UpdateAssetInfo> assets);
-    void UpdateCandleInfo(UpdateCandleInfo candleInfo);
+    Task UpdateAssetsInfo(IReadOnlyList<UpdateAssetInfo> assets);
+    Task UpdateCandleInfo(UpdateCandleInfo candleInfo);
 }
 
 public record UpdateAssetInfo(
@@ -14,5 +14,6 @@ public record UpdateAssetInfo(
 
 public record UpdateCandleInfo(
     string Uid,
+    DateTime CandleStartTime,
     decimal Close
 );

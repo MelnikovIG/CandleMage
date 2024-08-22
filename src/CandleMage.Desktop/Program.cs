@@ -3,6 +3,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using CandleMage.Core;
+using CandleMage.Core.Mocks;
 using CandleMage.Desktop.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -20,9 +21,10 @@ sealed class Program
     {
         var builder = Host.CreateApplicationBuilder(args);
 
-        builder.Services.AddHostedService<HostedService>();
         builder.Logging.AddConsole();
         builder.Services.Configure<Configuration>(builder.Configuration.GetSection("Configuration"));
+        // builder.Services.AddSingleton<ITelegramNotifier, MockTelegramNotifier>();
+        // builder.Services.AddSingleton<IExecutor, MockExecutor>();
         builder.Services.AddSingleton<ITelegramNotifier, TelegramNotifier>();
         builder.Services.AddSingleton<IExecutor, Executor>();
         builder.Services.AddSingleton<IStockEventNotifier, DesktopStockEventNotifier>();

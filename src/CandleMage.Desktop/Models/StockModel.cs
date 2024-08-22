@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace CandleMage.Desktop.Models;
 
-public class Stock (string Uid, string Name, string Ticker): ObservableObject
+public class StockModel (string Uid, string Name, string Ticker): ObservableObject
 {
     public string Uid { get; init; } = Uid;
     public string Name { get; init; } = Name;

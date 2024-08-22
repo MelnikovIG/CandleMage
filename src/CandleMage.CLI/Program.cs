@@ -11,6 +11,8 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddHostedService<HostedService>();
 builder.Logging.AddConsole();
 builder.Services.Configure<Configuration>(builder.Configuration.GetSection("Configuration"));
+// builder.Services.AddSingleton<ITelegramNotifier, MockTelegramNotifier>();
+// builder.Services.AddSingleton<IExecutor, MockExecutor>();
 builder.Services.AddSingleton<ITelegramNotifier, TelegramNotifier>();
 builder.Services.AddSingleton<IExecutor, Executor>();
 builder.Services.AddSingleton<IStockEventNotifier, ConsoleStockEventNotifier>();

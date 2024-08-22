@@ -7,7 +7,7 @@
         x:Class="CandleMage.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="CandleMage.Desktop">
+        Title="CandleMage">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -15,17 +15,32 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <DataGrid Margin="5" ItemsSource="{Binding Stocks}" 
-              IsReadOnly="True" 
-              GridLinesVisibility="All"
-              BorderThickness="1"
-              BorderBrush="Gray">
-        <DataGrid.Columns>
-            <DataGridTextColumn Header="Имя" Width="*" Binding="{Binding Name}"/>
-            <DataGridTextColumn Header="Тикер" Width="*" Binding="{Binding Ticker}" />
-            <DataGridTextColumn Header="Цена" Width="*" Binding="{Binding LastPrice, TargetNullValue='-'}" />
-            <DataGridTextColumn Header="Обновлено" Width="*" Binding="{Binding LastUpdated, StringFormat='hh:mm:ss.fff', TargetNullValue='-'} "  />
-        </DataGrid.Columns>
-    </DataGrid>
-    
+    <TabControl Margin="0">
+        <TabItem Header="Инструменты">
+            <DataGrid Margin="0" ItemsSource="{Binding Stocks}" 
+                      IsReadOnly="True" 
+                      GridLinesVisibility="All"
+                      BorderThickness="1"
+                      BorderBrush="Gray">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Имя" Width="*" Binding="{Binding Name}"/>
+                    <DataGridTextColumn Header="Тикер" Width="200" Binding="{Binding Ticker}" />
+                    <DataGridTextColumn Header="Цена" Width="200" Binding="{Binding LastPrice, TargetNullValue='-'}" />
+                    <DataGridTextColumn Header="Обновлено" Width="150" Binding="{Binding LastUpdated, StringFormat='hh:mm:ss.fff', TargetNullValue='-'} "  />
+                </DataGrid.Columns>
+            </DataGrid>
+        </TabItem>
+        <TabItem Header="События">
+            <DataGrid Margin="0" ItemsSource="{Binding Events}" 
+                      IsReadOnly="True" 
+                      GridLinesVisibility="All"
+                      BorderThickness="1"
+                      BorderBrush="Gray">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Дата" Width="150" Binding="{Binding Date, StringFormat='hh:mm:ss.fff'}"/>
+                    <DataGridTextColumn Header="Сообщение" Width="*" Binding="{Binding Message}" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </TabItem>
+    </TabControl>
 </Window>
